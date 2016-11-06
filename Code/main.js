@@ -15,7 +15,10 @@
 })();
 
 var canvas = document.getElementById("canvas");
-check(canvas);
+console.log("Canvas loaded.");
+var context = (check(canvas)) ? canvas.getContext("2d") : null;
+console.log("Context loaded.");
+check(context);
 
 function check(object) {
    if(!object || object === null) {
