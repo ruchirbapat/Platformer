@@ -33,3 +33,7 @@ var collisionChecker= {
       return false;
     }
 }
+
+var input = {
+
+}
