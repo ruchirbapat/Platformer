@@ -27,6 +27,9 @@ function check(object) {
 
 var collisionChecker= {
     quickBoxTest: function(boxA, boxB) {
-        
+        if(boxA.x < boxB.x + boxB.width && boxA.x + boxA.width > boxB.x && boxA.y < boxB.y + boxB.height && boxA.height + boxA.y > boxB.y)
+         return true;      
+      
+      return false;
     }
 }
