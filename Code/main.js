@@ -35,5 +35,7 @@ var collisionChecker= {
 }
 
 var input = {
-
+    getKeyDown: function(keyToCheck) {
+        
+    }
 }
