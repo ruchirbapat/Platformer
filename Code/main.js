@@ -13,3 +13,14 @@
         }
     }
 })();
+
+function check(object) {
+   if(!object || object === null) {
+      console.error(object.constructor.name + " is NULL.");
+      return false;
+   } else {
+      //console.group("Properties of " + object.constructor.name + ": ");
+      console.log(object.constructor.name + " has been created.")
+      return true;
+   }
+}
