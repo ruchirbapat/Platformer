@@ -14,6 +14,9 @@
     }
 })();
 
+var canvas = document.getElementById("canvas");
+check(canvas);
+
 function check(object) {
    if(!object || object === null) {
       console.error(object.constructor.name + " is NULL.");
