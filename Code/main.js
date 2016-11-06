@@ -24,3 +24,9 @@ function check(object) {
       return true;
    }
 }
+
+var collisionChecker= {
+    quickBoxTest: function(boxA, boxB) {
+        
+    }
+}
