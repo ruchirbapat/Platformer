@@ -20,6 +20,9 @@ var context = (check(canvas)) ? canvas.getContext("2d") : null;
 console.log("Context loaded.");
 check(context);
 
+canvas.style.background = "rgb(52, 55, 60)";
+console.log("Background colour set to " + canvas.style.background + ".");
+
 function check(object) {
    if(!object || object === null) {
       console.error(object.constructor.name + " is NULL.");
