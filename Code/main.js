@@ -1,20 +1,3 @@
-(function() 
-{
-    if (!window.requestAnimationFrame) 
-    { 
-        window.requestAnimationFrame = window.webkitRequestAnimationFrame || 
-        window.mozRequestAnimationFrame    || 
-        window.oRequestAnimationFrame      || 
-        window.msRequestAnimationFrame     || 
-        
-        function(callback, element) 
-        {
-            window.setTimeout(callback, 1000 / FRAME_RATE);
-        }
-    }
-})();
-console.log("Animation frame requested.");
-
 var canvas = document.getElementById("canvas");
 console.log("Canvas loaded.");
 var context = (check(canvas)) ? canvas.getContext("2d") : null;
@@ -29,23 +12,63 @@ var heldKeys = [];
 const FRAMERATE = 10;
 const BOX_SIZE = 20;
 const GRAVITY = 0.9;
-const JUMP_VELOCITY = 10;
+const JUMP_VELOCITY = 15;
 const SPEED = 10;
 const ACCELERATION = 1;
 const FRICTION = 0.9;
+const columns = canvas.height / BOX_SIZE;
+const rows = canvas.width / BOX_SIZE;
+
+var level = new Array(columns);
+for(var i = 0; i < level.length; i++)
+   level[i] = new Array(rows);
 
 var playerSpawnX, playerSpawnY;
 playerSpawnX = canvas.width / 2;
 playerSpawnY = 0;
 console.log("Values set for properties.");
 
-player = new Player(playerSpawnX, playerSpawnY, BOX_SIZE, BOX_SIZE * 2, "rgb(255, 100, 100)");
+player = new Player(playerSpawnX, playerSpawnY, BOX_SIZE, BOX_SIZE * 2, "rgba(255, 100, 100, 1)");
 console.log("Player created.");
 player.toString();
 check(player);
 
 box = new Box(0, canvas.height - BOX_SIZE, canvas.width, BOX_SIZE, "rgb(100, 100, 255)");
 
+for(var x = 0; x < columns; x++) {
+   for(var y = 0; y < rows; y++) {
+      var randVal = randomNumber(1, 100);
+      level[x][y] = ((randVal >= 90) ? 1 : 0);
+   }
+}
+
+for(var x = 1; x < columns; x++) {
+   for(var y = 1  ; y < rows; y++) {
+      console.log("The value at level[" + x + "][" + y + "] is " + level[x][y]);
+   }
+}
+
+for(var x = 1; x < columns; x++) {
+   for(var y = 1; y < rows; y++) {
+      if(level[x][y] === 1)
+         box = new Box(x * columns, y * rows, BOX_SIZE, BOX_SIZE, "rgba(100, 100, 255, 0.5)")
+   }
+}
+
+
+(function() {
+    if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame    ||
+        window.oRequestAnimationFrame      ||
+        window.msRequestAnimationFrame     ||
+
+        function(callback, element) {
+            window.setTimeout(callback, 1000 / FRAME_RATE);
+        }
+    }
+})();
+console.log("Animation frame requested.");
 
 function Player(xPos, yPos, _width, _height, _renderColour) {
    this.x = xPos;
@@ -57,40 +80,42 @@ function Player(xPos, yPos, _width, _height, _renderColour) {
    this.yVelocity = 0;
    this.grounded = false;
    this.jumping = false;
-   
+   this.doubleJumping = false;
+   this.jumpCount = 0;
+
    this.toString = function() {
       console.log("Player's position: (" + this.x + ", " + this.y + ")");
       console.log("Player's dimensions: (" + this.width + ", " + this.height + ")");
       console.log("Player's colour: " + this.colour);
       console.log("Player's velocity: (" + this.xVelocity + ", " + this.yVelocity + ")");
    }
-   
+
    this.respawn = function() {
       this.x = playerSpawnX;
       this.y = playerSpawnY;
    }
-   
+
    this.respawn = function(x, y) {
       this.x = x;
       this.y = y;
    }
-   
+
    this.setVelocity = function(x, y) {
       this.xVelocity = x;
       this.yVelocity = y;
    }
-      
+
    this.calculateVelocity = function() {
       if(input.getKeyDown(keyCode.upArrow) && this.grounded)
          this.setVelocity(0, -SPEED);
-      
+
       if(input.getKeyDown(keyCode.rightArrow))
          this.setVelocity(SPEED, 0);
-      
+
       if(input.getKeyDown(keyCode.leftArrow))
-         this.setVelocity(-SPEED, 0);    
+         this.setVelocity(-SPEED, 0);
    }
-   
+
    this.adjustVelocityByCollision = function(toTest) {
       if((collisionChecker.testCollision(this, toTest) === "b") || this.y === canvas.height - BOX_SIZE) {
          this.setVelocity(this.xVelocity, 0);
@@ -98,23 +123,23 @@ function Player(xPos, yPos, _width, _height, _renderColour) {
          this.jumping = false;
       }
    }
-   
+
    this.applyVelocity = function() {
       this.x += this.xVelocity;
       this.y += this.yVelocity;
       this.y += GRAVITY;
    }
-   
+
    this.resetVelocity = function() {
       this.xVelocity = 0;
       this.yVelocity = 0;
    }
-   
+
    this.constrain = function() {
       this.x = clamp(this.x, 0, canvas.width - BOX_SIZE);
       this.y = clamp(this.y, 0, canvas.height - BOX_SIZE);
    }
-   
+
    this.update = function() {
       this.resetVelocity();
       this.calculateVelocity();
@@ -122,14 +147,17 @@ function Player(xPos, yPos, _width, _height, _renderColour) {
       this.constrain();
       this.resetVelocity();
    }
-   
+
    this.move = function() {
       if(input.getKeyDown(keyCode.upArrow) || input.getKeyDown(keyCode.spacebarKey)) {
-         if(!player.jumping && player.grounded) {
+         if((!player.jumping) && player.grounded) {
             player.yVelocity = -JUMP_VELOCITY;
             player.grounded = false;
             player.jumping = true;
+            player.doubleJumping = false;
+            player.jumpCount++;
          }
+
       }
 
       if(input.getKeyDown(keyCode.leftArrow) && player.xVelocity > -SPEED)
@@ -144,7 +172,7 @@ function Player(xPos, yPos, _width, _height, _renderColour) {
       player.y += player.yVelocity;
       player.x += player.xVelocity;
    }
-   
+
    this.render = function() {
       context.fillStyle = this.colour;
       context.fillRect(this.x, this.y, this.width, this.height);
@@ -158,20 +186,20 @@ function Box(xPos, yPos, _width, _height, _renderColour) {
    this.width = _width;
    this.height = _height;
    this.colour = _renderColour;
-   
+
    boxes.push(this);
-   
+
    this.toString = function() {
       console.log("Box's position: (" + this.x + ", " + this.y + ")");
       console.log("Box's dimensions: (" + this.width + ", " + this.height + ")");
       console.log("Box's colour: " + this.colour);
    }
-   
+
    this.constrain = function() {
       this.x = clamp(this.x, 0, canvas.width - BOX_SIZE);
       this.y = clamp(this.y, 0, canvas.height - BOX_SIZE);
    }
-   
+
    this.render = function() {
       context.fillStyle = this.colour;
       context.fillRect(this.x, this.y, this.width, this.height);
@@ -197,28 +225,32 @@ console.log("About to render first frame!");
 function update() {
    for(var i = 0; i < boxes.length; i++)
       boxes[i].render();
-   
-   player.move();  
-   
+
+   player.move();
+
    context.clearRect(0, 0, canvas.width, canvas.height);
-   
+
    for(var i = 0; i < boxes.length; i++) {
-      
+
       player.grounded = true;
-      
+
       var collDir = collisionChecker.testCollision(player, boxes[i]);
-      
+
       if(collDir === "r" || collDir === "l" || player.y === (canvas.height - BOX_SIZE)) {
          player.xVelocity = 0;
          player.jumping = false;
+         player.doubleJumping = false;
+         player.jumpCount = 0;
          console.log("Player received a collision on the " + ((collDir === "r") ? "right" : "left") + "!");
-      } 
+      }
       if(collDir === "b") {
          player.grounded = true;
          player.yVelocity = 0;
          player.jumping = false;
+         player.doubleJumping = false;
+         player.jumpCount = 0;
          console.log("Player received a collision on the bottom!");
-      } 
+      }
       if(collDir === "t") {
          player.yVelocity = 0;
       }
@@ -239,7 +271,7 @@ function clamp(value, min, max) {
       return max;
    else if(value < min)
       return min
-   
+
    return value;
 }
 
@@ -264,11 +296,11 @@ function check(object) {
 var collisionChecker = {
    quickBoxTest: function(boxA, boxB) {
       if(boxA.x < boxB.x + boxB.width && boxA.x + boxA.width > boxB.x && boxA.y < boxB.y + boxB.height && boxA.height + boxA.y > boxB.y)
-         return true;      
-      
+         return true;
+
       return false;
    },
-   
+
    testCollision: function(objectA, objectB) {
       //Find the collision vectors
       var vectorX = (objectA.x + (objectA.width / 2)) - (objectB.x + (objectB.width / 2));
@@ -292,14 +324,14 @@ var collisionChecker = {
          if(directionX >= directionY)
          {
             //Check for collisions from the top
-            if(vectorY > 0) 
+            if(vectorY > 0)
             {
                objectA.y += directionY;
                collisionDir = "t";
             }
 
             //Collisions form the botttom
-            else 
+            else
             {
                objectA.y -= directionY;
                collisionDir = "b";
@@ -308,14 +340,14 @@ var collisionChecker = {
          else
          {
             //Check for collisions from the left
-            if(vectorX > 0) 
+            if(vectorX > 0)
             {
                objectA.x += directionX;
                collisionDir = "l";
             }
 
             //Collisions form the right side
-            else 
+            else
             {
                objectA.x -= directionX;
                collisionDir = "r";
@@ -326,6 +358,10 @@ var collisionChecker = {
       //Return the direction.
       return collisionDir;
    }
+}
+
+function randomNumber(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
 var input = {
@@ -342,11 +378,11 @@ var keyCode = {
    downArrow: 40,
    leftArrow: 37,
    rightArrow: 39,
-   
+
    wKey: 87,
    aKey: 65,
    sKey: 83,
    dKey: 68,
-   
+
    spacebarKey: 32
 }
