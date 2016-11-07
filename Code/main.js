@@ -43,11 +43,7 @@ console.log("Player created.");
 player.toString();
 check(player);
 
-
-for(var i = 0; i < 20; i++) {
-   box = new Box(Math.floor((Math.random() * (canvas.width - BOX_SIZE))), Math.floor((Math.random() * (canvas.height - BOX_SIZE))), BOX_SIZE, BOX_SIZE, "red");
-}
-
+box = new Box(0, canvas.height - BOX_SIZE, canvas.width, BOX_SIZE, "red");
 
 
 function Player(xPos, yPos, _width, _height, _renderColour) {
@@ -126,6 +122,28 @@ function Player(xPos, yPos, _width, _height, _renderColour) {
       this.resetVelocity();
    }
    
+   this.move = function() {
+      if(input.getKeyDown(keyCode.upArrow) || input.getKeyDown(keyCode.spacebarKey)) {
+         if(!player.jumping && player.grounded) {
+            player.yVelocity = -JUMP_VELOCITY;
+            player.grounded = false;
+            player.jumping = true;
+         }
+      }
+
+      if(input.getKeyDown(keyCode.leftArrow) && player.xVelocity > -SPEED)
+         player.xVelocity -= ACCELERATION;
+
+      if(input.getKeyDown(keyCode.rightArrow) && player.xVelocity < SPEED)
+         player.xVelocity += ACCELERATION;
+
+      player.xVelocity *= FRICTION;
+      player.yVelocity += GRAVITY;
+
+      player.y += player.yVelocity;
+      player.x += player.xVelocity;
+   }
+   
    this.render = function() {
       context.fillStyle = this.colour;
       context.fillRect(this.x, this.y, this.width, this.height);
@@ -176,55 +194,31 @@ console.log("keyup Event Listener set.");
 
 console.log("About to render first frame!");
 function update() {
-   context.clearRect(0, 0, canvas.width, canvas.height);
-  
    for(var i = 0; i < boxes.length; i++)
       boxes[i].render();
    
-   //player.update();
-   /*
-   for(var i =0; i < boxes.length; i++)
-      player.adjustVelocityByCollision(boxes[i]);
-   */
-   
-   if(input.getKeyDown(keyCode.upArrow) || input.getKeyDown(keyCode.spacebarKey)) {
-      if(!player.jumping && player.grounded) {
-         player.yVelocity = -JUMP_VELOCITY;
-         player.grounded = false;
-         player.jumping = true;
-      }
-   }
-   
-   if(input.getKeyDown(keyCode.leftArrow) && player.xVelocity > -SPEED)
-      player.xVelocity -= ACCELERATION;
-
-   if(input.getKeyDown(keyCode.rightArrow) && player.xVelocity < SPEED)
-      player.xVelocity += ACCELERATION;
-
-   player.xVelocity *= FRICTION;
-   player.yVelocity += GRAVITY;
-
-   player.y += player.yVelocity;
-   player.x += player.xVelocity;
+   player.move();  
    
    context.clearRect(0, 0, canvas.width, canvas.height);
    
    for(var i = 0; i < boxes.length; i++) {
       
-      player.grounded = false;
+      player.grounded = true;
       
       var collDir = collisionChecker.testCollision(player, boxes[i]);
       
-      if(collDir === "r" || collDir === "l") {
+      if(collDir === "r" || collDir === "l" || player.y === (canvas.height - BOX_SIZE)) {
          player.xVelocity = 0;
          player.jumping = false;
          console.log("Player received a collision on the " + ((collDir === "r") ? "right" : "left") + "!");
-      } else if(collDir === "b") {
+      } 
+      if(collDir === "b") {
          player.grounded = true;
          player.yVelocity = 0;
          player.jumping = false;
          console.log("Player received a collision on the bottom!");
-      } else if(collDir === "t") {
+      } 
+      if(collDir === "t") {
          player.yVelocity = 0;
       }
       render(boxes[i]);
@@ -274,6 +268,7 @@ var collisionChecker = {
       return false;
    },
    
+   //Credit to Obtuse Studios for this collision algorithm
    testCollision: function(objectA, objectB) {
     //Find the collision vectors
     var vectorX = (objectA.x + (objectA.width / 2)) - (objectB.x + (objectB.width / 2));
