@@ -26,7 +26,7 @@ console.log("Background colour set to " + canvas.style.background + ".");
 
 var boxes = [];
 var heldKeys = [];
-const FRAMERATE = 60;
+const FRAMERATE = 10;
 const BOX_SIZE = 20;
 const GRAVITY = 0.9;
 const JUMP_VELOCITY = 10;
@@ -35,15 +35,16 @@ const ACCELERATION = 1;
 const FRICTION = 0.9;
 
 var playerSpawnX, playerSpawnY;
-playerSpawnX = playerSpawnY = 0;
+playerSpawnX = canvas.width / 2;
+playerSpawnY = 0;
 console.log("Values set for properties.");
 
-player = new Player(0, 0, BOX_SIZE, BOX_SIZE * 2, "white");
+player = new Player(playerSpawnX, playerSpawnY, BOX_SIZE, BOX_SIZE * 2, "rgb(255, 100, 100)");
 console.log("Player created.");
 player.toString();
 check(player);
 
-box = new Box(0, canvas.height - BOX_SIZE, canvas.width, BOX_SIZE, "red");
+box = new Box(0, canvas.height - BOX_SIZE, canvas.width, BOX_SIZE, "rgb(100, 100, 255)");
 
 
 function Player(xPos, yPos, _width, _height, _renderColour) {
