@@ -55,7 +55,10 @@ var collisionChecker= {
 }
 
 var input = {
-    getKeyDown: function(keyToCheck) {
-        
-    }
+   getKeyDown: function(keyToCheck) {
+      if(heldKeys[keyToCheck] === true)
+         return true
+      else
+   return false;
+   }
 }
