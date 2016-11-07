@@ -23,6 +23,17 @@ check(context);
 canvas.style.background = "rgb(52, 55, 60)";
 console.log("Background colour set to " + canvas.style.background + ".");
 
+var boxes = [];
+var heldKeys = [];
+const FRAMERATE = 60;
+const BOX_SIZE = 20;
+const GRAVITY = 9.68;
+const JUMP_VELOCITY = 100;
+const SPEED = 5;
+const ACCELERATION = 1;
+const FRICTION = 0.8;
+console.log("Values set for properties.");
+
 function check(object) {
    if(!object || object === null) {
       console.error(object.constructor.name + " is NULL.");
