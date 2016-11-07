@@ -38,7 +38,7 @@ var playerSpawnX, playerSpawnY;
 playerSpawnX = playerSpawnY = 0;
 console.log("Values set for properties.");
 
-player = new Player(0, 0, BOX_SIZE, BOX_SIZE, "white");
+player = new Player(0, 0, BOX_SIZE, BOX_SIZE * 2, "white");
 console.log("Player created.");
 player.toString();
 check(player);
@@ -268,63 +268,62 @@ var collisionChecker = {
       return false;
    },
    
-   //Credit to Obtuse Studios for this collision algorithm
    testCollision: function(objectA, objectB) {
-    //Find the collision vectors
-    var vectorX = (objectA.x + (objectA.width / 2)) - (objectB.x + (objectB.width / 2));
-    var vectorY = (objectA.y + (objectA.height / 2)) - (objectB.y + (objectB.height / 2));
-    
-    //Find the distance between the two objects
-    var deltaWidth = (objectA.width / 2) + (objectB.width / 2);
-    var deltaHeight = (objectA.height / 2) + (objectB.height / 2);
-    
-    //Stores the direction of collision
-    var collisionDir = null;
-    
-    //Check if the two objects are intersecting on the x and y axis
-    if(Math.abs(vectorX) < deltaWidth && Math.abs(vectorY) < deltaHeight)
-    {
-        //The direction of collision
-        var directionX = deltaWidth - Math.abs(vectorX);
-        var directionY = deltaHeight - Math.abs(vectorY);
-        
-        //Check for vertical collision
-        if(directionX >= directionY)
-        {
+      //Find the collision vectors
+      var vectorX = (objectA.x + (objectA.width / 2)) - (objectB.x + (objectB.width / 2));
+      var vectorY = (objectA.y + (objectA.height / 2)) - (objectB.y + (objectB.height / 2));
+
+      //Find the distance between the two objects
+      var deltaWidth = (objectA.width / 2) + (objectB.width / 2);
+      var deltaHeight = (objectA.height / 2) + (objectB.height / 2);
+
+      //Stores the direction of collision
+      var collisionDir = null;
+
+      //Check if the two objects are intersecting on the x and y axis
+      if(Math.abs(vectorX) < deltaWidth && Math.abs(vectorY) < deltaHeight)
+      {
+         //The direction of collision
+         var directionX = deltaWidth - Math.abs(vectorX);
+         var directionY = deltaHeight - Math.abs(vectorY);
+
+         //Check for vertical collision
+         if(directionX >= directionY)
+         {
             //Check for collisions from the top
             if(vectorY > 0) 
             {
-                objectA.y += directionY;
-                collisionDir = "t";
+               objectA.y += directionY;
+               collisionDir = "t";
             }
-            
+
             //Collisions form the botttom
             else 
             {
-                objectA.y -= directionY;
-                collisionDir = "b";
+               objectA.y -= directionY;
+               collisionDir = "b";
             }
-        }
-        else
-        {
+         }
+         else
+         {
             //Check for collisions from the left
             if(vectorX > 0) 
             {
-                objectA.x += directionX;
-                collisionDir = "l";
+               objectA.x += directionX;
+               collisionDir = "l";
             }
-            
+
             //Collisions form the right side
             else 
             {
-                objectA.x -= directionX;
-                collisionDir = "r";
+               objectA.x -= directionX;
+               collisionDir = "r";
             }
-        }
-    }
-    
-    //Return the direction.
-    return collisionDir;
+         }
+      }
+
+      //Return the direction.
+      return collisionDir;
    }
 }
 
@@ -333,7 +332,7 @@ var input = {
       if(heldKeys[keyToCheck] === true)
          return true
       else
-   return false;
+         return false;
    }
 }
 
