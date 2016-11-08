@@ -4,11 +4,9 @@ Just a fun little platformer made by me as a side project to work on when my par
 
 ---
 
-> Possible names for the game:
+Possible names for the game:
 
 1. Disconnected
 2. The Offline Square
 2. Where's the Power Cable?
 3. I need Stack Overflow!
-
----
