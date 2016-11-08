@@ -319,7 +319,8 @@ var collisionChecker = {
 
         return false;
     },
-
+    
+    //Credit to Obtuse Studios for this collision detection algorithm
     testCollision: function(objectA, objectB) {
         //Find the collision vectors
         var vectorX = (objectA.x + (objectA.width / 2)) - (objectB.x + (objectB.width / 2));
