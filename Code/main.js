@@ -9,7 +9,7 @@ console.log("Background colour set to " + canvas.style.background + ".");
 
 var boxes = [];
 var heldKeys = [];
-const FRAMERATE = 10;
+const FRAMERATE = 75;
 const BOX_SIZE = 20;
 const GRAVITY = 0.9;
 const JUMP_VELOCITY = 15;
@@ -18,7 +18,7 @@ const ACCELERATION = 1;
 const FRICTION = 0.9;
 const columns = (canvas.height - BOX_SIZE) / BOX_SIZE;
 const rows = (canvas.width - BOX_SIZE) / BOX_SIZE;
-const fillAmount = 10;
+const fillAmount = 15;
 
 var level = new Array(columns);
 for(var i = 0; i < level.length; i++)
@@ -36,7 +36,7 @@ console.log("Player created.");
 player.toString();
 check(player);
 
-box = new Box(0, canvas.height - BOX_SIZE, canvas.width, BOX_SIZE, "rgb(100, 100, 255)");
+var box = new Box(0, canvas.height - BOX_SIZE, canvas.width, BOX_SIZE, "rgb(100, 100, 255)");
 
 for(var x = 0; x < columns; x++) {
     for(var y = 0; y < rows; y++) {
@@ -58,19 +58,8 @@ for(var x = 1; x < columns; x++) {
         }
 }
 
+requestForAnimator();
 
-(function() {
-    if (!window.requestAnimationFrame) {
-        window.requestAnimationFrame = window.webkitRequestAnimationFrame ||
-            window.mozRequestAnimationFrame    ||
-            window.oRequestAnimationFrame      ||
-            window.msRequestAnimationFrame     ||
-
-            function(callback, element) {
-            window.setTimeout(callback, 1000 / FRAME_RATE);
-        }
-    }
-})();
 console.log("Animation frame requested.");
 
 function Player(xPos, yPos, _width, _height, _renderColour) {
@@ -157,8 +146,6 @@ function Player(xPos, yPos, _width, _height, _renderColour) {
                 player.yVelocity = -JUMP_VELOCITY;
                 player.grounded = false;
                 player.jumping = true;
-                player.doubleJumping = false;
-                player.jumpCount++;
             }
 
         }
@@ -226,20 +213,39 @@ console.log("keyup Event Listener set.");
 
 console.log("About to render first frame!");
 function update() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
     for(var i = 0; i < boxes.length; i++)
         boxes[i].render();
-
     
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    if(input.getKeyDown(keyCode.upArrow) || input.getKeyDown(keyCode.spacebarKey)) {
+            if((!player.jumping) && player.grounded) {
+                player.yVelocity = -JUMP_VELOCITY;
+                player.grounded = false;
+                player.jumping = true;
+            }
 
+        }
+
+        if(input.getKeyDown(keyCode.leftArrow) && player.xVelocity > -SPEED)
+            player.xVelocity -= ACCELERATION;
+
+        if(input.getKeyDown(keyCode.rightArrow) && player.xVelocity < SPEED)
+            player.xVelocity += ACCELERATION;
+
+        player.xVelocity *= FRICTION;
+        player.yVelocity += GRAVITY;
+
+        player.y += player.yVelocity;
+        player.x += player.xVelocity;
+    
     for(var i = 0; i < boxes.length; i++) {
-        player.grounded = true;
+        //player.grounded = true;
 
         if(collisionChecker.quickBoxTest(player, boxes[i])) {
             
             var collDir = collisionChecker.testCollision(player, boxes[i]);
 
-            if(collDir === "r" || collDir === "l" || player.y === (canvas.height - BOX_SIZE)) {
+            if(collDir === "r" || collDir === "l" || player.y === (canvas.height - player.height)) {
                 player.xVelocity = 0;
                 player.jumping = false;
                 player.doubleJumping = false;
@@ -258,16 +264,19 @@ function update() {
                 player.yVelocity = 0;
             }
         }
-        render(boxes[i]);
+        //render(boxes[i]);
     }
-    player.move();
+        
+    //player.move();
 
     render(player);
 }
 
 function game() {
     update();
-    requestAnimationFrame(game);
+    setTimeout(function() {
+        requestAnimationFrame(game);
+    }, 1000 / FRAMERATE);
 }
 window.addEventListener("load", game);
 
@@ -395,4 +404,31 @@ var keyCode = {
     dKey: 68,
 
     spacebarKey: 32
+}
+
+function requestForAnimator() {
+    (function() {
+    var lastTime = 0;
+    var vendors = ['ms', 'moz', 'webkit', 'o'];
+    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+        window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
+                                   || window[vendors[x]+'CancelRequestAnimationFrame'];
+    }
+ 
+    if (!window.requestAnimationFrame)
+        window.requestAnimationFrame = function(callback, element) {
+            var currTime = new Date().getTime();
+            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+            var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+              timeToCall);
+            lastTime = currTime + timeToCall;
+            return id;
+        };
+ 
+    if (!window.cancelAnimationFrame)
+        window.cancelAnimationFrame = function(id) {
+            clearTimeout(id);
+        };
+}());
 }
