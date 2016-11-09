@@ -1,5 +1,5 @@
 var canvas = document.getElementById("canvas");
-canvas.width = canvas.height = 750;
+canvas.width = canvas.height = 1200;
 console.log("Canvas loaded.");
 var context = (check(canvas)) ? canvas.getContext("2d") : null;
 console.log("Context loaded.");
@@ -10,16 +10,16 @@ console.log("Background colour set to " + canvas.style.background + ".");
 
 var boxes = [];
 var heldKeys = [];
-const FRAMERATE = 10000;
+const FRAMERATE = 75;
 const BOX_SIZE = 20;
 const GRAVITY = 0.984;
-const JUMP_VELOCITY = 25;
-const SPEED = 10;
+const JUMP_VELOCITY = 17;
+const SPEED = 12.5;
 const ACCELERATION = 1;
-const FRICTION = 0.8;
+const SMOOTHNESS = 0.9;
 const columns = Math.floor((canvas.height - BOX_SIZE) / BOX_SIZE);
 const rows = Math.floor((canvas.width - BOX_SIZE) / BOX_SIZE);
-const fillAmount = 5;
+const fillAmount = 70;
 
 var level = new Array(columns);
 for(var i = 0; i < level.length; i++)
@@ -41,6 +41,7 @@ var box = new Box(0, canvas.height - BOX_SIZE, canvas.width, BOX_SIZE, "rgb(100,
 
 var boxTop = new Box(0, 0 - BOX_SIZE, canvas.width, BOX_SIZE, "rgb(100, 100, 255)");
 
+/*
 for(var x = 0; x < columns; x++) {
     for(var y = 0; y < rows; y++) {
         if (x == 0 || x == ((canvas.width - BOX_SIZE)-1) || y == 0 || y == ((canvas.height - BOX_SIZE) - 1)) {
@@ -51,35 +52,49 @@ for(var x = 0; x < columns; x++) {
         }
     }
 }
+*/
 
 
-/*
 for(var x = 0; x < columns; x++) {
     for(var y = 0; y < rows; y++) {
         if (x === 0 || x === ((canvas.width - BOX_SIZE)-1) || y === 0 || y == ((canvas.height - BOX_SIZE) - 1)) {
-					level[x][y] = 1;
-				}
-				else {
-					level[x][y] = (randomNumber(0, 100) < fillAmount)? 1: 0;
-				}
+            level[x][y] = 1;
+        }
+        else {
+            level[x][y] = (randomNumber(0, 100) < fillAmount)? 1: 0;
+        }
     }
 }
-*/
 
-/*
+
 for (var x = 0; x < (canvas.width - BOX_SIZE); x ++) {
-			for (var y = 0; y < (canvas.height - BOX_SIZE); y ++) {
-				var neighbourWallTiles = GetSurroundingWallCount(x,y);
+    for (var y = 0; y < (canvas.height - BOX_SIZE); y ++) {
+        var neighbourWallTiles = getWalls(x,y);
 
-				if (neighbourWallTiles > 4)
-					level[x][y] = 1;
-				else if (neighbourWallTiles < 4)
-					level[x][y] = 0;
+        if (neighbourWallTiles > 4)
+            level[x][y] = 1;
+        else if (neighbourWallTiles < 4)
+            level[x][y] = 0;
 
-			}
+    }
 }
-*/
 
+function getWalls(x, y) {
+    var count = 0;
+    for(var i=-1; i<2; i++){
+        for(var j=-1; j<2; j++){
+            var neighbour_x = x+i;
+            var neighbour_y = y+j;
+            if(i == 0 && j == 0){
+                continue;
+            } else if(neighbour_x < 0 || neighbour_y < 0 || neighbour_x >= level.length || neighbour_y >= level[0].length){
+                count = count + 1;
+            } else if(level[neighbour_x][neighbour_y]){
+                count = count + 1;
+            }
+        }
+    }
+}
 
 for(var x = 1; x < columns; x++) {
     for(var y = 1  ; y < rows; y++) {
@@ -87,13 +102,13 @@ for(var x = 1; x < columns; x++) {
     }
 }
 
+
 for(var x = 1; x < columns; x++) {
     for(var y = 1; y < rows; y++) {
         if(level[x][y] === 1)
             box = new Box(x * columns, y * rows, BOX_SIZE, BOX_SIZE, "rgb(100, 100, 255)")
             }
 }
-
 
 requestForAnimator();
 
@@ -209,7 +224,7 @@ function Player(xPos, yPos, _width, _height, _renderColour) {
         if(input.getKeyDown(keyCode.rightArrow) && player.xVelocity < SPEED)
             player.xVelocity += ACCELERATION;
 
-        player.xVelocity *= FRICTION;
+        player.xVelocity *= SMOOTHNESS;
         player.yVelocity += GRAVITY;
 
         player.y += player.yVelocity;
@@ -285,7 +300,7 @@ function update() {
     if(input.getKeyDown(keyCode.rightArrow) && player.xVelocity < SPEED)
         player.xVelocity += ACCELERATION;
 
-    player.xVelocity *= FRICTION;
+    player.xVelocity *= SMOOTHNESS;
     player.yVelocity += GRAVITY;
 
     player.y += player.yVelocity;
@@ -387,41 +402,34 @@ var collisionChecker = {
         var collisionDir = null;
 
         //Check if the two objects are intersecting on the x and y axis
-        if(Math.abs(vectorX) < deltaWidth && Math.abs(vectorY) < deltaHeight)
-        {
+        if(Math.abs(vectorX) < deltaWidth && Math.abs(vectorY) < deltaHeight) {
             //The direction of collision
             var directionX = deltaWidth - Math.abs(vectorX);
             var directionY = deltaHeight - Math.abs(vectorY);
 
             //Check for vertical collision
-            if(directionX >= directionY)
-            {
+            if(directionX >= directionY) {
                 //Check for collisions from the top
-                if(vectorY > 0)
-                {
+                if(vectorY > 0) {
                     objectA.y += directionY;
                     collisionDir = "t";
                 }
 
                 //Collisions form the botttom
-                else
-                {
+                else {
                     objectA.y -= directionY;
                     collisionDir = "b";
                 }
             }
-            else
-            {
+            else {
                 //Check for collisions from the left
-                if(vectorX > 0)
-                {
+                if(vectorX > 0) {
                     objectA.x += directionX;
                     collisionDir = "l";
                 }
 
                 //Collisions form the right side
-                else
-                {
+                else {
                     objectA.x -= directionX;
                     collisionDir = "r";
                 }
