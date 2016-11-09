@@ -1,4 +1,5 @@
 var canvas = document.getElementById("canvas");
+canvas.width = canvas.height = 750;
 console.log("Canvas loaded.");
 var context = (check(canvas)) ? canvas.getContext("2d") : null;
 console.log("Context loaded.");
@@ -9,16 +10,16 @@ console.log("Background colour set to " + canvas.style.background + ".");
 
 var boxes = [];
 var heldKeys = [];
-const FRAMERATE = 75;
+const FRAMERATE = 10000;
 const BOX_SIZE = 20;
-const GRAVITY = 0.9;
-const JUMP_VELOCITY = 15;
+const GRAVITY = 0.984;
+const JUMP_VELOCITY = 25;
 const SPEED = 10;
 const ACCELERATION = 1;
-const FRICTION = 0.9;
-const columns = (canvas.height - BOX_SIZE) / BOX_SIZE;
-const rows = (canvas.width - BOX_SIZE) / BOX_SIZE;
-const fillAmount = 15;
+const FRICTION = 0.8;
+const columns = Math.floor((canvas.height - BOX_SIZE) / BOX_SIZE);
+const rows = Math.floor((canvas.width - BOX_SIZE) / BOX_SIZE);
+const fillAmount = 5;
 
 var level = new Array(columns);
 for(var i = 0; i < level.length; i++)
@@ -31,19 +32,54 @@ playerSpawnX = canvas.width / 2;
 playerSpawnY = 0;
 console.log("Values set for properties.");
 
-player = new Player(playerSpawnX, playerSpawnY, BOX_SIZE, BOX_SIZE * 2, "rgba(255, 100, 100, 1)");
+player = new Player(playerSpawnX, playerSpawnY, BOX_SIZE * 2, BOX_SIZE * 2, "rgba(255, 100, 100, 1)");
 console.log("Player created.");
 player.toString();
 check(player);
 
 var box = new Box(0, canvas.height - BOX_SIZE, canvas.width, BOX_SIZE, "rgb(100, 100, 255)");
 
+var boxTop = new Box(0, 0 - BOX_SIZE, canvas.width, BOX_SIZE, "rgb(100, 100, 255)");
+
 for(var x = 0; x < columns; x++) {
     for(var y = 0; y < rows; y++) {
-        var randVal = randomNumber(1, 101);
-        level[x][y] = ((randVal <= fillAmount) ? 1 : 0);
+        if (x == 0 || x == ((canvas.width - BOX_SIZE)-1) || y == 0 || y == ((canvas.height - BOX_SIZE) - 1)) {
+            level[x][y] = 1;
+        } else {
+            var randVal = randomNumber(0, 101);
+            level[x][y] = ((randVal < fillAmount) ? 1 : 0);
+        }
     }
 }
+
+
+/*
+for(var x = 0; x < columns; x++) {
+    for(var y = 0; y < rows; y++) {
+        if (x === 0 || x === ((canvas.width - BOX_SIZE)-1) || y === 0 || y == ((canvas.height - BOX_SIZE) - 1)) {
+					level[x][y] = 1;
+				}
+				else {
+					level[x][y] = (randomNumber(0, 100) < fillAmount)? 1: 0;
+				}
+    }
+}
+*/
+
+/*
+for (var x = 0; x < (canvas.width - BOX_SIZE); x ++) {
+			for (var y = 0; y < (canvas.height - BOX_SIZE); y ++) {
+				var neighbourWallTiles = GetSurroundingWallCount(x,y);
+
+				if (neighbourWallTiles > 4)
+					level[x][y] = 1;
+				else if (neighbourWallTiles < 4)
+					level[x][y] = 0;
+
+			}
+}
+*/
+
 
 for(var x = 1; x < columns; x++) {
     for(var y = 1  ; y < rows; y++) {
@@ -54,13 +90,31 @@ for(var x = 1; x < columns; x++) {
 for(var x = 1; x < columns; x++) {
     for(var y = 1; y < rows; y++) {
         if(level[x][y] === 1)
-            box = new Box(x * columns, y * rows, BOX_SIZE, BOX_SIZE, "rgba(100, 100, 255, 0.5)")
-        }
+            box = new Box(x * columns, y * rows, BOX_SIZE, BOX_SIZE, "rgb(100, 100, 255)")
+            }
 }
+
 
 requestForAnimator();
 
 console.log("Animation frame requested.");
+
+function GetSurroundingWallCount(gridX, gridY) {
+    var wallCount = 0;
+    for(var neighbourX = gridX - 1; neighbourX <= gridX + 1; neighbourX++) {
+        for(var neighbourY = gridY - 1; neighbourY <= gridY + 1; neighbourY++) {
+            if(neighbourX >= 0 && neighbourX < (canvas.width - BOX_SIZE) && neighbourY >= 0 && neighbourY < (canvas.height - BOX_SIZE)) {
+                if(neighbourX != gridX || neighbourY != gridY) {
+                    wallCount += level[neighbourX][neighbourY];
+                }
+            } else {
+                wallCount++;
+            }
+        }
+    }
+
+    return wallCount;
+}
 
 function Player(xPos, yPos, _width, _height, _renderColour) {
     this.x = xPos;
@@ -147,7 +201,6 @@ function Player(xPos, yPos, _width, _height, _renderColour) {
                 player.grounded = false;
                 player.jumping = true;
             }
-
         }
 
         if(input.getKeyDown(keyCode.leftArrow) && player.xVelocity > -SPEED)
@@ -216,33 +269,33 @@ function update() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     for(var i = 0; i < boxes.length; i++)
         boxes[i].render();
-    
-    if(input.getKeyDown(keyCode.upArrow) || input.getKeyDown(keyCode.spacebarKey)) {
-            if((!player.jumping) && player.grounded) {
-                player.yVelocity = -JUMP_VELOCITY;
-                player.grounded = false;
-                player.jumping = true;
-            }
 
+    if(input.getKeyDown(keyCode.upArrow) || input.getKeyDown(keyCode.spacebarKey)) {
+        if((!player.jumping) && player.grounded) {
+            player.yVelocity = -JUMP_VELOCITY;
+            player.grounded = false;
+            player.jumping = true;
         }
 
-        if(input.getKeyDown(keyCode.leftArrow) && player.xVelocity > -SPEED)
-            player.xVelocity -= ACCELERATION;
+    }
 
-        if(input.getKeyDown(keyCode.rightArrow) && player.xVelocity < SPEED)
-            player.xVelocity += ACCELERATION;
+    if(input.getKeyDown(keyCode.leftArrow) && player.xVelocity > -SPEED)
+        player.xVelocity -= ACCELERATION;
 
-        player.xVelocity *= FRICTION;
-        player.yVelocity += GRAVITY;
+    if(input.getKeyDown(keyCode.rightArrow) && player.xVelocity < SPEED)
+        player.xVelocity += ACCELERATION;
 
-        player.y += player.yVelocity;
-        player.x += player.xVelocity;
-    
+    player.xVelocity *= FRICTION;
+    player.yVelocity += GRAVITY;
+
+    player.y += player.yVelocity;
+    player.x += player.xVelocity;
+
     for(var i = 0; i < boxes.length; i++) {
         //player.grounded = true;
 
         if(collisionChecker.quickBoxTest(player, boxes[i])) {
-            
+
             var collDir = collisionChecker.testCollision(player, boxes[i]);
 
             if(collDir === "r" || collDir === "l" || player.y === (canvas.height - player.height)) {
@@ -266,7 +319,7 @@ function update() {
         }
         //render(boxes[i]);
     }
-        
+
     //player.move();
 
     render(player);
@@ -291,8 +344,8 @@ function clamp(value, min, max) {
 }
 
 function render(object) {
-    object.x = clamp(object.x, 0, canvas.width - BOX_SIZE);
-    object.y = clamp(object.y, 0, canvas.height - BOX_SIZE);
+    object.x = clamp(object.x, 0, canvas.width - object.width);
+    object.y = clamp(object.y, 0, canvas.height - object.height);
     context.fillStyle = object.colour;
     context.fillRect(object.x, object.y, object.width, object.height, object.colour);
 }
@@ -317,9 +370,9 @@ var collisionChecker = {
         else
             //console.log("Quick Box Test between " + boxA.constructor.name + " and " + boxB.constructor.name + " returned false.");
 
-        return false;
+            return false;
     },
-    
+
     //Credit to Obtuse Studios for this collision detection algorithm
     testCollision: function(objectA, objectB) {
         //Find the collision vectors
@@ -374,7 +427,7 @@ var collisionChecker = {
                 }
             }
         }
-        
+
         //Return the direction.
         return collisionDir;
     }
@@ -409,27 +462,27 @@ var keyCode = {
 
 function requestForAnimator() {
     (function() {
-    var lastTime = 0;
-    var vendors = ['ms', 'moz', 'webkit', 'o'];
-    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
-        window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
-                                   || window[vendors[x]+'CancelRequestAnimationFrame'];
-    }
- 
-    if (!window.requestAnimationFrame)
-        window.requestAnimationFrame = function(callback, element) {
-            var currTime = new Date().getTime();
-            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-            var id = window.setTimeout(function() { callback(currTime + timeToCall); },
-              timeToCall);
-            lastTime = currTime + timeToCall;
-            return id;
-        };
- 
-    if (!window.cancelAnimationFrame)
-        window.cancelAnimationFrame = function(id) {
-            clearTimeout(id);
-        };
-}());
+        var lastTime = 0;
+        var vendors = ['ms', 'moz', 'webkit', 'o'];
+        for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+            window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+            window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
+            || window[vendors[x]+'CancelRequestAnimationFrame'];
+        }
+
+        if (!window.requestAnimationFrame)
+            window.requestAnimationFrame = function(callback, element) {
+                var currTime = new Date().getTime();
+                var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+                                           timeToCall);
+                lastTime = currTime + timeToCall;
+                return id;
+            };
+
+        if (!window.cancelAnimationFrame)
+            window.cancelAnimationFrame = function(id) {
+                clearTimeout(id);
+            };
+    }());
 }
