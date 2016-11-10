@@ -1,5 +1,5 @@
 var canvas = document.getElementById("canvas");
-canvas.width = canvas.height = 1200;
+canvas.width = canvas.height = 1000;
 console.log("Canvas loaded.");
 var context = (check(canvas)) ? canvas.getContext("2d") : null;
 console.log("Context loaded.");
@@ -13,13 +13,13 @@ var heldKeys = [];
 const FRAMERATE = 75;
 const BOX_SIZE = 20;
 const GRAVITY = 0.984;
-const JUMP_VELOCITY = 17;
+const JUMP_VELOCITY = 15.5;
 const SPEED = 12.5;
 const ACCELERATION = 1;
-const SMOOTHNESS = 0.9;
+const SMOOTHNESS = 0.85;
 const columns = Math.floor((canvas.height - BOX_SIZE) / BOX_SIZE);
 const rows = Math.floor((canvas.width - BOX_SIZE) / BOX_SIZE);
-const fillAmount = 70;
+const fillAmount = 50;
 
 var level = new Array(columns);
 for(var i = 0; i < level.length; i++)
@@ -80,7 +80,7 @@ for (var x = 0; x < (canvas.width - BOX_SIZE); x ++) {
 }
 
 function getWalls(x, y) {
-    var count = 0;
+    var walls = 0;
     for(var i=-1; i<2; i++){
         for(var j=-1; j<2; j++){
             var neighbour_x = x+i;
@@ -88,9 +88,9 @@ function getWalls(x, y) {
             if(i == 0 && j == 0){
                 continue;
             } else if(neighbour_x < 0 || neighbour_y < 0 || neighbour_x >= level.length || neighbour_y >= level[0].length){
-                count = count + 1;
+                walls++;
             } else if(level[neighbour_x][neighbour_y]){
-                count = count + 1;
+                z = walls + 1;
             }
         }
     }
@@ -106,8 +106,8 @@ for(var x = 1; x < columns; x++) {
 for(var x = 1; x < columns; x++) {
     for(var y = 1; y < rows; y++) {
         if(level[x][y] === 1)
-            box = new Box(x * columns, y * rows, BOX_SIZE, BOX_SIZE, "rgb(100, 100, 255)")
-            }
+            box = new Box(x * columns, y * rows, columns, rows, "rgb(100, 100, 255)");
+    }
 }
 
 requestForAnimator();
