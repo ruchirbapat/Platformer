@@ -22,7 +22,7 @@ const ACCELERATION = 1;
 const SMOOTHNESS = 0.85;
 const columns = Math.floor((canvas.height - BOX_SIZE) / BOX_SIZE);
 const rows = Math.floor((canvas.width - BOX_SIZE) / BOX_SIZE);
-const fillAmount = 50;
+const fillAmount = 30;
 var quadTree = new QuadTree();
 var topLeftRect = new Rect(0, 0, (canvas.width / 2), (canvas.height / 2));
 var topRightRect = new Rect((canvas.width / 2), 0, (canvas.width / 2), (canvas.height / 2));
@@ -51,11 +51,11 @@ var box = new Box(0, canvas.height - BOX_SIZE, canvas.width, BOX_SIZE, "rgb(100,
 //Cellular automata based block placement
 for(var x = 0; x < columns; x++) {
     for(var y = 0; y < rows; y++) {
-        if (x === 0 || x === ((canvas.width - BOX_SIZE)-1) || y === 0 || y == ((canvas.height - BOX_SIZE) - 1)) {
+        if ((x === 0) || (x === ((canvas.width - BOX_SIZE)-1)) || (y === 0) || (y === ((canvas.height - BOX_SIZE) - 1)) ) {
             level[x][y] = 1;
         }
         else {
-            level[x][y] = (randomNumber(0, 100) < fillAmount)? 1: 0;
+            level[x][y] = (randomNumber(0, 100) < fillAmount) ? 1 : 0;
         }
     }
 }
