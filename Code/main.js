@@ -1,3 +1,4 @@
+//Setup
 var canvas = document.getElementById("canvas");
 canvas.width = canvas.height = 1000;
 console.log("Canvas loaded.");
@@ -8,6 +9,7 @@ check(context);
 canvas.style.background = "rgb(52, 55, 60)";
 console.log("Background colour set to " + canvas.style.background + ".");
 
+//Variables
 var boxes = [];
 var heldKeys = [];
 const FRAMERATE = 75;
@@ -21,27 +23,27 @@ const columns = Math.floor((canvas.height - BOX_SIZE) / BOX_SIZE);
 const rows = Math.floor((canvas.width - BOX_SIZE) / BOX_SIZE);
 const fillAmount = 50;
 
+//Create level
 var level = new Array(columns);
 for(var i = 0; i < level.length; i++)
     level[i] = new Array(rows);
 
 check(level);
 
+//Create player
 var playerSpawnX, playerSpawnY;
 playerSpawnX = canvas.width / 2;
 playerSpawnY = 0;
-console.log("Values set for properties.");
-
-player = new Player(playerSpawnX, playerSpawnY, BOX_SIZE * 2, BOX_SIZE * 2, "rgba(255, 100, 100, 1)");
+player = new Player(playerSpawnX, playerSpawnY, columns, rows, "rgba(255, 100, 100, 1)");
 console.log("Player created.");
 player.toString();
 check(player);
 
+//Create floor
 var box = new Box(0, canvas.height - BOX_SIZE, canvas.width, BOX_SIZE, "rgb(100, 100, 255)");
 
-var boxTop = new Box(0, 0 - BOX_SIZE, canvas.width, BOX_SIZE, "rgb(100, 100, 255)");
-
 /*
+//Random block placement
 for(var x = 0; x < columns; x++) {
     for(var y = 0; y < rows; y++) {
         if (x == 0 || x == ((canvas.width - BOX_SIZE)-1) || y == 0 || y == ((canvas.height - BOX_SIZE) - 1)) {
@@ -54,7 +56,7 @@ for(var x = 0; x < columns; x++) {
 }
 */
 
-
+//Cellular automata based block placement
 for(var x = 0; x < columns; x++) {
     for(var y = 0; y < rows; y++) {
         if (x === 0 || x === ((canvas.width - BOX_SIZE)-1) || y === 0 || y == ((canvas.height - BOX_SIZE) - 1)) {
@@ -65,7 +67,6 @@ for(var x = 0; x < columns; x++) {
         }
     }
 }
-
 
 for (var x = 0; x < (canvas.width - BOX_SIZE); x ++) {
     for (var y = 0; y < (canvas.height - BOX_SIZE); y ++) {
@@ -79,6 +80,7 @@ for (var x = 0; x < (canvas.width - BOX_SIZE); x ++) {
     }
 }
 
+//Returns walls around a node
 function getWalls(x, y) {
     var walls = 0;
     for(var i=-1; i<2; i++){
@@ -96,13 +98,14 @@ function getWalls(x, y) {
     }
 }
 
+//Prints level values
 for(var x = 1; x < columns; x++) {
     for(var y = 1  ; y < rows; y++) {
         console.log("The value at level[" + x + "][" + y + "] is " + level[x][y]);
     }
 }
 
-
+//Draws box at available nodes
 for(var x = 1; x < columns; x++) {
     for(var y = 1; y < rows; y++) {
         if(level[x][y] === 1)
@@ -110,27 +113,12 @@ for(var x = 1; x < columns; x++) {
     }
 }
 
+
 requestForAnimator();
 
 console.log("Animation frame requested.");
 
-function GetSurroundingWallCount(gridX, gridY) {
-    var wallCount = 0;
-    for(var neighbourX = gridX - 1; neighbourX <= gridX + 1; neighbourX++) {
-        for(var neighbourY = gridY - 1; neighbourY <= gridY + 1; neighbourY++) {
-            if(neighbourX >= 0 && neighbourX < (canvas.width - BOX_SIZE) && neighbourY >= 0 && neighbourY < (canvas.height - BOX_SIZE)) {
-                if(neighbourX != gridX || neighbourY != gridY) {
-                    wallCount += level[neighbourX][neighbourY];
-                }
-            } else {
-                wallCount++;
-            }
-        }
-    }
-
-    return wallCount;
-}
-
+//Player
 function Player(xPos, yPos, _width, _height, _renderColour) {
     this.x = xPos;
     this.y = yPos;
@@ -237,7 +225,7 @@ function Player(xPos, yPos, _width, _height, _renderColour) {
     }
 }
 
-
+//Box
 function Box(xPos, yPos, _width, _height, _renderColour) {
     this.x = xPos;
     this.y = yPos;
@@ -264,6 +252,7 @@ function Box(xPos, yPos, _width, _height, _renderColour) {
     }
 }
 
+//Event listeners
 function onKeyDown(key) {
     if(key.target == document.body) {
         key.preventDefault();
@@ -279,6 +268,7 @@ function onKeyUp(key) {
 window.addEventListener("keyup", onKeyUp, false);
 console.log("keyup Event Listener set.");
 
+//Update function
 console.log("About to render first frame!");
 function update() {
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -340,6 +330,7 @@ function update() {
     render(player);
 }
 
+//Game function
 function game() {
     update();
     setTimeout(function() {
@@ -348,7 +339,7 @@ function game() {
 }
 window.addEventListener("load", game);
 
-
+//Helper functions
 function clamp(value, min, max) {
     if(value > max)
         return max;
@@ -379,12 +370,9 @@ function check(object) {
 var collisionChecker = {
     quickBoxTest: function(boxA, boxB) {
         if(boxA.x < boxB.x + boxB.width && boxA.x + boxA.width > boxB.x && boxA.y < boxB.y + boxB.height && boxA.height + boxA.y > boxB.y) {
-            //console.log("Quick Box Test between " + boxA.constructor.name + " and " + boxB.constructor.name + " returned true.");
             return true;
         }
         else
-            //console.log("Quick Box Test between " + boxA.constructor.name + " and " + boxB.constructor.name + " returned false.");
-
             return false;
     },
 
@@ -445,6 +433,7 @@ function randomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
+//Input class
 var input = {
     getKeyDown: function(keyToCheck) {
         if(heldKeys[keyToCheck] === true)
@@ -454,6 +443,7 @@ var input = {
     }
 }
 
+//Holds some useful keycodes
 var keyCode = {
     upArrow: 38,
     downArrow: 40,
@@ -468,6 +458,7 @@ var keyCode = {
     spacebarKey: 32
 }
 
+//Animation frame requests
 function requestForAnimator() {
     (function() {
         var lastTime = 0;
