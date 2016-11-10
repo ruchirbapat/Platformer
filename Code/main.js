@@ -98,21 +98,23 @@ function getWalls(x, y) {
     }
 }
 
-//Prints level values
-for(var x = 1; x < columns; x++) {
-    for(var y = 1  ; y < rows; y++) {
-        console.log("The value at level[" + x + "][" + y + "] is " + level[x][y]);
-    }
-}
-
+var wallCount = 0;
 //Draws box at available nodes
 for(var x = 1; x < columns; x++) {
     for(var y = 1; y < rows; y++) {
-        if(level[x][y] === 1)
-            box = new Box(x * columns, y * rows, columns, rows, "rgb(100, 100, 255)");
+        if(level[x][y] === 1) {
+            if((level[x][y].x > canvas.width) || (level[x][y].y > canvas.height) || (level[x][y].x < canvas.width) || (level[x][y].y < canvas.height)) {
+                level[x][y] = null; delete level[x][y]; continue;
+            }
+            else {
+                wallCount++;
+                box = new Box(x * columns, y * rows, columns, rows, "rgb(100, 100, 255)"); 
+            }
+        }
     }
 }
 
+console.log("Level generated with " + wallCount + " walls.");
 
 requestForAnimator();
 
