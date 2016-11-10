@@ -15,6 +15,7 @@ var quadTreeRects = [];
 var heldKeys = [];
 const FRAMERATE = 75;
 const BOX_SIZE = 20;
+const NODE_SIZE = 5;
 const GRAVITY = 0.984;
 const JUMP_VELOCITY = 15.5;
 const SPEED = 12.5;
@@ -46,12 +47,12 @@ player.toString();
 check(player);
 
 //Create floor
-var box = new Box(0, canvas.height - BOX_SIZE, canvas.width, BOX_SIZE, "rgb(100, 100, 255)");
+//var box = new Box(0, canvas.height - NODE_SIZE, canvas.width, NODE_SIZE, "rgb(100, 100, 255)");
 
 //Cellular automata based block placement
 for(var x = 0; x < columns; x++) {
     for(var y = 0; y < rows; y++) {
-        if ((x === 0) || (x === ((canvas.width - BOX_SIZE)-1)) || (y === 0) || (y === ((canvas.height - BOX_SIZE) - 1)) ) {
+        if ((x === 0) || (x === 20) || (y === 0) || (y === 20)) {
             level[x][y] = 1;
         }
         else {
@@ -60,8 +61,8 @@ for(var x = 0; x < columns; x++) {
     }
 }
 
-for (var x = 0; x < (canvas.width - BOX_SIZE); x ++) {
-    for (var y = 0; y < (canvas.height - BOX_SIZE); y ++) {
+for (var x = 0; x < (canvas.width - NODE_SIZE); x ++) {
+    for (var y = 0; y < (canvas.height - NODE_SIZE); y ++) {
         var neighbourWallTiles = getWalls(x,y);
 
         if (neighbourWallTiles > 4)
@@ -109,7 +110,7 @@ for(var x = 0; x < columns; x++) {
             }
             else {
                 wallCount++;
-                box = new Box(x * columns, y * rows, columns, rows, "rgb(100, 100, 255)"); 
+                box = new Box(x * columns, y * rows, columns * 0.99, rows * 0.99, "rgb(100, 100, 255)"); 
             }
         }
     }
@@ -287,13 +288,13 @@ function Rect(xPos, yPos, _width, _height) {
 function QuadTree() {
     this.findQuad = function(object) {
         if((object.x <= canvas.width / 2) && (object.y <= canvas.height / 2)) {
-            topLeftRect.objects.push(object); return topLeftRect; }
+            topLeftRect.objects.push(object); return "tl"; }
         else if((object.x > canvas.width / 2) && (object.y < canvas.height / 2)) {
-            topRightRect.objects.push(object); return topRightRect; }
+            topRightRect.objects.push(object); return "tr"; }
         else if((object.x <= canvas.width / 2) && (object.y > canvas.height / 2)) {
-            bottomLeftRect.objects.push(object); return bottomLeftRect; }
+            bottomLeftRect.objects.push(object); return "bl"; }
         else if((object.x > canvas.width / 2) && (object.y > canvas.height / 2)) {
-            bottomRightRect.objects.push(object); return bottomRightRect; }
+            bottomRightRect.objects.push(object); return "br"; }
         else
             console.warning("The object " + object.constructor.name + " does not fit in the quadtree!");
     }
@@ -323,7 +324,7 @@ function update() {
     for(var i = 0; i < boxes.length; i++)
         boxes[i].render();
 
-    if(input.getKeyDown(keyCode.upArrow) || input.getKeyDown(keyCode.spacebarKey)) {
+    if(input.getKeyDown(keyCode.upArrow) || input.getKeyDown(keyCode.spacebarKey) || input.getKeyDown(keyCode.wKeyw)) {
         if((!player.jumping) && player.grounded) {
             player.yVelocity = -JUMP_VELOCITY;
             player.grounded = false;
@@ -332,10 +333,10 @@ function update() {
 
     }
 
-    if(input.getKeyDown(keyCode.leftArrow) && player.xVelocity > -SPEED)
+    if((input.getKeyDown(keyCode.leftArrow) || input.getKeyDown(keyCode.aKey)) && player.xVelocity > -SPEED)
         player.xVelocity -= ACCELERATION;
 
-    if(input.getKeyDown(keyCode.rightArrow) && player.xVelocity < SPEED)
+    if((input.getKeyDown(keyCode.rightArrow) || input.getKeyDown(keyCode.dKey)) && player.xVelocity < SPEED)
         player.xVelocity += ACCELERATION;
 
     player.xVelocity *= SMOOTHNESS;
@@ -344,12 +345,14 @@ function update() {
     player.y += player.yVelocity;
     player.x += player.xVelocity;
     
-    quadTree.findQuad(player);
-    
+    playersQuad = quadTree.findQuad(player);
+   if(quadTree.findQuad(player) != null && quadTree.findQuad(player))
+      console.log("Player is in the " + quadTree.findQuad(player) + " quad.")
+   
     for(var i = 0; i < boxes.length; i++) {
         //player.grounded = true;
 
-        if(collisionChecker.quickBoxTest(player, boxes[i])) {
+        //if(collisionChecker.quickBoxTest(player, boxes[i])) {
 
             var collDir = collisionChecker.testCollision(player, boxes[i]);
 
@@ -371,51 +374,13 @@ function update() {
             if(collDir === "t") {
                 player.yVelocity = 0;
             }
-        }
+        //}
         //render(boxes[i]);
     }
 
     //player.move();
 
     render(player);
-    
-    /*
-    playerQuad = quadTree.findQuad(player);
-    playerQuadObjects = playerQuad.objects;
-    
-    for(var i = 0; i < playerQuadObjects.length; i++) {
-        //player.grounded = true;
-
-        if(collisionChecker.quickBoxTest(player, playerQuadObjects[i])) {
-
-            var collDir = collisionChecker.testCollision(player, playerQuadObjects[i]);
-
-            if(collDir === "r" || collDir === "l" || player.y === (canvas.height - player.height)) {
-                player.xVelocity = 0;
-                player.jumping = false;
-                player.doubleJumping = false;
-                player.jumpCount = 0;
-                //console.log("Player received a collision on the " + ((collDir === "r") ? "right" : "left") + "!");
-            }
-            if(collDir === "b") {
-                player.grounded = true;
-                player.yVelocity = 0;
-                player.jumping = false;
-                player.doubleJumping = false;
-                player.jumpCount = 0;
-                //console.log("Player received a collision on the bottom!");
-            }
-            if(collDir === "t") {
-                player.yVelocity = 0;
-            }
-        }
-        render(playerQuad.objects[i]);
-    }
-
-    //player.move();
-
-    render(player);
-    */
 }
 
 //Game function
