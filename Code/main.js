@@ -1,6 +1,6 @@
 //Setup
 var canvas = document.getElementById("canvas");
-canvas.width = canvas.height = 1000;
+canvas.width = canvas.height = 680;
 console.log("Canvas loaded.");
 var context = (check(canvas)) ? canvas.getContext("2d") : null;
 console.log("Context loaded.");
@@ -11,6 +11,7 @@ console.log("Background colour set to " + canvas.style.background + ".");
 
 //Variables
 var boxes = [];
+var quadTreeRects = [];
 var heldKeys = [];
 const FRAMERATE = 75;
 const BOX_SIZE = 20;
@@ -22,6 +23,11 @@ const SMOOTHNESS = 0.85;
 const columns = Math.floor((canvas.height - BOX_SIZE) / BOX_SIZE);
 const rows = Math.floor((canvas.width - BOX_SIZE) / BOX_SIZE);
 const fillAmount = 50;
+var quadTree = new QuadTree();
+var topLeftRect = new Rect(0, 0, (canvas.width / 2), (canvas.height / 2));
+var topRightRect = new Rect((canvas.width / 2), 0, (canvas.width / 2), (canvas.height / 2));
+var bottomLeftRect = new Rect((canvas.height / 2), 0, (canvas.width / 2), (canvas.height / 2));
+var bottomRightRect = new Rect((canvas.width / 2), (canvas.height / 2), (canvas.width / 2), (canvas.height / 2));
 
 //Create level
 var level = new Array(columns);
@@ -33,28 +39,14 @@ check(level);
 //Create player
 var playerSpawnX, playerSpawnY;
 playerSpawnX = canvas.width / 2;
-playerSpawnY = 0;
-player = new Player(playerSpawnX, playerSpawnY, columns, rows, "rgba(255, 100, 100, 1)");
+playerSpawnY = canvas.height / 2;
+player = new Player(playerSpawnX, playerSpawnY, columns, rows, "rgb(244,108,108)");
 console.log("Player created.");
 player.toString();
 check(player);
 
 //Create floor
 var box = new Box(0, canvas.height - BOX_SIZE, canvas.width, BOX_SIZE, "rgb(100, 100, 255)");
-
-/*
-//Random block placement
-for(var x = 0; x < columns; x++) {
-    for(var y = 0; y < rows; y++) {
-        if (x == 0 || x == ((canvas.width - BOX_SIZE)-1) || y == 0 || y == ((canvas.height - BOX_SIZE) - 1)) {
-            level[x][y] = 1;
-        } else {
-            var randVal = randomNumber(0, 101);
-            level[x][y] = ((randVal < fillAmount) ? 1 : 0);
-        }
-    }
-}
-*/
 
 //Cellular automata based block placement
 for(var x = 0; x < columns; x++) {
@@ -98,10 +90,19 @@ function getWalls(x, y) {
     }
 }
 
+/*
+//Print values
+for(var x = 0; x < columns; x++) {
+    for(var y = 0; y < rows; y++) {
+        console.log("The value at level[" + x + "][" + y + "] is " + level[x][y]);
+    }
+}
+*/
+
 var wallCount = 0;
 //Draws box at available nodes
-for(var x = 1; x < columns; x++) {
-    for(var y = 1; y < rows; y++) {
+for(var x = 0; x < columns; x++) {
+    for(var y = 0; y < rows; y++) {
         if(level[x][y] === 1) {
             if((level[x][y].x > canvas.width) || (level[x][y].y > canvas.height) || (level[x][y].x < canvas.width) || (level[x][y].y < canvas.height)) {
                 level[x][y] = null; delete level[x][y]; continue;
@@ -113,6 +114,9 @@ for(var x = 1; x < columns; x++) {
         }
     }
 }
+
+for(var i = 0; i < boxes.length; i++)
+    quadTree.findQuad(boxes[i]);
 
 console.log("Level generated with " + wallCount + " walls.");
 
@@ -252,6 +256,48 @@ function Box(xPos, yPos, _width, _height, _renderColour) {
         context.fillStyle = this.colour;
         context.fillRect(this.x, this.y, this.width, this.height);
     }
+    
+    this.renderAsCircle = function() {
+        context.fillStyle = this.colour;
+        context.arc(this.x, this.y, (this.width / 2), 0, 2 * Math.PI);
+        context.fill();
+    }
+}
+
+//Rect
+function Rect(xPos, yPos, _width, _height) {
+    this.x = xPos;
+    this.y = yPos;
+    this.width = _width;
+    this.height = _height;
+    this.objects = [];
+    quadTreeRects.push(this);
+
+    this.toString = function() {
+        console.log("Rect's position: (" + this.x + ", " + this.y + ")");
+        console.log("Rect's dimensions: (" + this.width + ", " + this.height + ")");
+    }
+
+    this.constrain = function() {
+        this.x = clamp(this.x, 0, canvas.width - BOX_SIZE);
+        this.y = clamp(this.y, 0, canvas.height - BOX_SIZE);
+    }
+}
+
+function QuadTree() {
+    this.findQuad = function(object) {
+        if((object.x <= canvas.width / 2) && (object.y <= canvas.height / 2)) {
+            topLeftRect.objects.push(object); return topLeftRect; }
+        else if((object.x > canvas.width / 2) && (object.y < canvas.height / 2)) {
+            topRightRect.objects.push(object); return topRightRect; }
+        else if((object.x <= canvas.width / 2) && (object.y > canvas.height / 2)) {
+            bottomLeftRect.objects.push(object); return bottomLeftRect; }
+        else if((object.x > canvas.width / 2) && (object.y > canvas.height / 2)) {
+            bottomRightRect.objects.push(object); return bottomRightRect; }
+        else
+            console.warning("The object " + object.constructor.name + " does not fit in the quadtree!");
+    }
+    
 }
 
 //Event listeners
@@ -297,7 +343,9 @@ function update() {
 
     player.y += player.yVelocity;
     player.x += player.xVelocity;
-
+    
+    quadTree.findQuad(player);
+    
     for(var i = 0; i < boxes.length; i++) {
         //player.grounded = true;
 
@@ -330,6 +378,44 @@ function update() {
     //player.move();
 
     render(player);
+    
+    /*
+    playerQuad = quadTree.findQuad(player);
+    playerQuadObjects = playerQuad.objects;
+    
+    for(var i = 0; i < playerQuadObjects.length; i++) {
+        //player.grounded = true;
+
+        if(collisionChecker.quickBoxTest(player, playerQuadObjects[i])) {
+
+            var collDir = collisionChecker.testCollision(player, playerQuadObjects[i]);
+
+            if(collDir === "r" || collDir === "l" || player.y === (canvas.height - player.height)) {
+                player.xVelocity = 0;
+                player.jumping = false;
+                player.doubleJumping = false;
+                player.jumpCount = 0;
+                //console.log("Player received a collision on the " + ((collDir === "r") ? "right" : "left") + "!");
+            }
+            if(collDir === "b") {
+                player.grounded = true;
+                player.yVelocity = 0;
+                player.jumping = false;
+                player.doubleJumping = false;
+                player.jumpCount = 0;
+                //console.log("Player received a collision on the bottom!");
+            }
+            if(collDir === "t") {
+                player.yVelocity = 0;
+            }
+        }
+        render(playerQuad.objects[i]);
+    }
+
+    //player.move();
+
+    render(player);
+    */
 }
 
 //Game function
