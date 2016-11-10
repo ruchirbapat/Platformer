@@ -6,3 +6,12 @@
     right: 0;
     margin:auto;
 }
+
+h1 {
+    text-align: center;
+    margin-top: auto;
+    color:rgb(255, 108, 108);
+    font-family: "Open Sans";
+    font-size: 90px;
+    font-weight: lighter;
+}
